@@ -4,6 +4,10 @@ from intelligence import fetch_category_news
 
 app = Flask(__name__)
 
+@app.route("/")
+def home():
+    return render_template("index.html")
+
 
 # -----------------------------
 # ALERT DETECTION
