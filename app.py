@@ -17,25 +17,19 @@ def home():
 def dashboard():
 
     return jsonify({
-        "summary": "INDSTAAL Dashboard LIVE (Stable Version)",
+        "summary": "INDSTAAL Intelligence Live",
 
-        "alerts": [
-            {
-                "title": "System Working Successfully",
-                "link": "#",
-                "insight": "Backend is now stable",
-                "impact": "HIGH",
-                "tag": "SYSTEM",
-                "score": 100,
-                "date": "NOW"
-            }
-        ],
+        "alerts": fetch_category_news("alerts"),
 
-        "top_opportunities": [],
-        "opportunities": [],
-        "competitors": [],
-        "steel": [],
-        "infra": []
+        "top_opportunities": fetch_category_news("opportunities"),
+
+        "opportunities": fetch_category_news("opportunities"),
+
+        "competitors": fetch_category_news("competitors"),
+
+        "steel": fetch_category_news("steel"),
+
+        "infra": fetch_category_news("infra")
     })
 
 
