@@ -1,10 +1,8 @@
-from flask import Flask, jsonify
-from flask_cors import CORS
+from flask import Flask, render_template, jsonify
 
 from intelligence import fetch_category_news
 
 app = Flask(__name__)
-CORS(app)
 
 
 # -----------------------------
