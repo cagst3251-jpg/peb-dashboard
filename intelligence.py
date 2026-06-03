@@ -1,9 +1,5 @@
 import feedparser
 import urllib.parse
-
-# ----------------------------
-# YOUR KEYWORDS STRUCTURE
-# ----------------------------
 from keywords import (
     competitors,
     clients,
@@ -12,10 +8,7 @@ from keywords import (
     infra_keywords
 )
 
-
-# ----------------------------
-# MAP KEYWORDS TO CATEGORIES
-# ----------------------------
+# ---------------- CATEGORY MAP ----------------
 queries = {
     "competitors": competitors,
     "alerts": clients,
@@ -25,9 +18,7 @@ queries = {
 }
 
 
-# ----------------------------
-# STORY FILTER (REMOVE DUPLICATES)
-# ----------------------------
+# ---------------- REMOVE DUPLICATES ----------------
 def story_key(title):
     title = title.lower()
 
@@ -43,9 +34,7 @@ def story_key(title):
     return " ".join(title.split()[:5])
 
 
-# ----------------------------
-# MAIN NEWS FUNCTION
-# ----------------------------
+# ---------------- MAIN FUNCTION ----------------
 def fetch_category_news(category):
 
     results = []
@@ -60,12 +49,10 @@ def fetch_category_news(category):
     for q in search_list:
 
         try:
-            query = urllib.parse.quote(q)
-
             url = (
                 "https://news.google.com/rss/search?q="
-                + query +
-                "&hl=en-IN&gl=IN&ceid=IN:en"
+                + urllib.parse.quote(q)
+                + "&hl=en-IN&gl=IN&ceid=IN:en"
             )
 
             feed = feedparser.parse(url)
@@ -73,10 +60,9 @@ def fetch_category_news(category):
             for entry in feed.entries:
 
                 try:
-                    title = entry.title.strip()
+                    title = entry.title
                     link = entry.link
 
-                    # ---------------- DUPLICATE CHECK ----------------
                     if link in seen_links:
                         continue
 
@@ -88,26 +74,20 @@ def fetch_category_news(category):
                     seen_links.add(link)
                     seen_stories.add(key)
 
-                    # ---------------- FINAL OUTPUT ----------------
                     results.append({
                         "title": title,
                         "link": link,
                         "date": getattr(entry, "published", "Recent"),
-                        "insight": "AI detected relevant industry movement",
+                        "insight": "AI detected industry movement",
                         "impact": "MEDIUM",
                         "tag": category.upper(),
                         "score": len(title)
                     })
 
-                except Exception as e:
-                    print("ENTRY ERROR:", e)
+                except:
                     continue
 
-        except Exception as e:
-            print("RSS ERROR:", e)
+        except:
             continue
 
-    # sort by relevance
-    results = sorted(results, key=lambda x: x["score"], reverse=True)
-
-    return results[:10]
+    return sorted(results, key=lambda x: x["score"], reverse=True)[:10]
