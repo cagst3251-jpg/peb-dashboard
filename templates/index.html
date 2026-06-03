@@ -245,7 +245,7 @@ function renderCards(container, data, start){
 
 async function loadData(){
 
-    const res = await fetch("http://127.0.0.1:5000/api/dashboard");
+    const res = await fetch("/api/dashboard");
     const data = await res.json();
 
     document.getElementById("summary").innerHTML = `
