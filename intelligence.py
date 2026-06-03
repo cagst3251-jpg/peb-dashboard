@@ -1,49 +1,40 @@
 import feedparser
 import urllib.parse
-import time
+
+# ----------------------------
+# YOUR KEYWORDS STRUCTURE
+# ----------------------------
+from keywords import (
+    competitors,
+    clients,
+    steel_keywords,
+    demand_keywords,
+    infra_keywords
+)
 
 
-# -------------------------
-# KEYWORDS
-# -------------------------
+# ----------------------------
+# MAP KEYWORDS TO CATEGORIES
+# ----------------------------
 queries = {
-    "alerts": [
-        "PEB steel plant India news",
-        "industrial accident factory India",
-        "major infrastructure delay India"
-    ],
-    "opportunities": [
-        "new warehouse construction India",
-        "industrial project order India PEB",
-        "factory expansion contract India"
-    ],
-    "competitors": [
-        "Kirby building systems order",
-        "Interarch projects India",
-        "Zamil steel India contract"
-    ],
-    "steel": [
-        "steel price India HRC",
-        "steel market India update",
-        "Tata steel price trend"
-    ],
-    "infra": [
-        "infrastructure project India bridge highway",
-        "industrial park development India",
-        "logistics warehouse India project"
-    ]
+    "competitors": competitors,
+    "alerts": clients,
+    "steel": steel_keywords,
+    "opportunities": demand_keywords,
+    "infra": infra_keywords
 }
 
 
-# -------------------------
-# SIMPLE STORY FILTER
-# -------------------------
+# ----------------------------
+# STORY FILTER (REMOVE DUPLICATES)
+# ----------------------------
 def story_key(title):
     title = title.lower()
 
     remove_words = [
-        "india", "project", "projects", "latest",
-        "new", "update", "expansion", "contract"
+        "india", "project", "projects",
+        "new", "latest", "update",
+        "contract", "order", "expansion"
     ]
 
     for w in remove_words:
@@ -52,13 +43,12 @@ def story_key(title):
     return " ".join(title.split()[:5])
 
 
-# -------------------------
-# RSS NEWS FETCH
-# -------------------------
+# ----------------------------
+# MAIN NEWS FUNCTION
+# ----------------------------
 def fetch_category_news(category):
 
     results = []
-
     seen_links = set()
     seen_stories = set()
 
@@ -86,7 +76,7 @@ def fetch_category_news(category):
                     title = entry.title.strip()
                     link = entry.link
 
-                    # skip duplicates
+                    # ---------------- DUPLICATE CHECK ----------------
                     if link in seen_links:
                         continue
 
@@ -98,24 +88,26 @@ def fetch_category_news(category):
                     seen_links.add(link)
                     seen_stories.add(key)
 
+                    # ---------------- FINAL OUTPUT ----------------
                     results.append({
                         "title": title,
                         "link": link,
                         "date": getattr(entry, "published", "Recent"),
-                        "insight": "AI detected relevant business update",
+                        "insight": "AI detected relevant industry movement",
                         "impact": "MEDIUM",
                         "tag": category.upper(),
-                        "score": len(title) + len(link)
+                        "score": len(title)
                     })
 
-                except:
+                except Exception as e:
+                    print("ENTRY ERROR:", e)
                     continue
 
         except Exception as e:
             print("RSS ERROR:", e)
             continue
 
-    # sort + limit
+    # sort by relevance
     results = sorted(results, key=lambda x: x["score"], reverse=True)
 
     return results[:10]
