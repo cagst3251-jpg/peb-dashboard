@@ -10,14 +10,19 @@ def home():
     return "PEB Dashboard Running Successfully"
 
 
+from intelligence import fetch_category_news
+
+
 @app.route("/api/dashboard")
 def dashboard():
 
     return jsonify({
-        "status": "ok",
-        "message": "server running"
+        "summary": "INDSTAAL Intelligence Live",
+
+        "alerts": fetch_category_news("alerts"),
+        "top_opportunities": fetch_category_news("opportunities"),
+        "opportunities": fetch_category_news("opportunities"),
+        "competitors": fetch_category_news("competitors"),
+        "steel": fetch_category_news("steel"),
+        "infra": fetch_category_news("infra")
     })
-
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
