@@ -1,18 +1,19 @@
 from flask import Flask, render_template, jsonify
 from flask_cors import CORS
 
+from intelligence import fetch_category_news
+
 app = Flask(__name__)
 CORS(app)
 
 
+# ---------------- HOME ----------------
 @app.route("/")
 def home():
-    return "PEB Dashboard Running Successfully"
+    return render_template("index.html")
 
 
-from intelligence import fetch_category_news
-
-
+# ---------------- API ----------------
 @app.route("/api/dashboard")
 def dashboard():
 
@@ -26,3 +27,8 @@ def dashboard():
         "steel": fetch_category_news("steel"),
         "infra": fetch_category_news("infra")
     })
+
+
+# ---------------- RUN ----------------
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=10000)
