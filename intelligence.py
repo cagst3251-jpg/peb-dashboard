@@ -12,7 +12,7 @@ def is_recent(entry):
             return True
 
         published = datetime(*entry.published_parsed[:6])
-        return published >= datetime.now() - timedelta(days=90)
+        return published >= datetime.now() - timedelta(days=7)
     except:
         return True
 

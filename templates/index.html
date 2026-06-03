@@ -2,25 +2,63 @@
 <html>
 
 <head>
+
     <title>INDSTAAL Intelligence Cockpit</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <style>
-        body {
-            background: #f4f6f8;
-            font-family: Arial;
+
+        body{
+            background:#f4f6f8;
+            font-family:Arial;
         }
 
-        .scroll {
-            max-height: 85vh;
-            overflow-y: auto;
+        .news-card{
+            background:white;
+            border-radius:16px;
+            padding:14px;
+            border:1px solid #e5e7eb;
+            cursor:pointer;
+            transition:all .25s ease;
+            margin-bottom:12px;
         }
 
-        .card:hover {
-            transform: translateY(-2px);
-            transition: 0.2s;
+        .news-card:hover{
+            transform:translateY(-4px);
+            box-shadow:0 12px 30px rgba(0,0,0,.15);
         }
+
+        .read{
+            opacity:0.45;
+            border:1px solid #cbd5e1 !important;
+        }
+
+        .tag{
+            display:inline-block;
+            padding:4px 10px;
+            border-radius:20px;
+            font-size:11px;
+            font-weight:bold;
+        }
+
+        .tab-btn{
+            padding:10px 18px;
+            border-radius:10px;
+            font-weight:600;
+            border:1px solid #d1d5db;
+            background:white;
+        }
+
+        .tab-active{
+            background:black;
+            color:white;
+        }
+
     </style>
+
 </head>
 
 <body>
@@ -28,167 +66,242 @@
 <!-- HEADER -->
 <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-black via-gray-900 to-black shadow-lg">
 
-    <!-- LEFT: LOGO + BRAND -->
     <div class="flex items-center gap-3">
 
-        <!-- LOGO WITH FALLBACK -->
-        <img src="/static/indstaal-logo.png" class="h-10 bg-white p-1 rounded">
+        <img src="/static/indstaal-logo.png"
+             class="h-10 bg-white p-1 rounded">
 
-        <div>
-            <div class="text-white font-bold text-lg tracking-wide">
+        <div class="text-white">
+            <div class="font-bold text-lg">
                 INDSTAAL Intelligence Cockpit
             </div>
-            <div class="text-gray-400 text-xs">
-                PEB Market Radar • Opportunity Detection System
+            <div class="text-xs text-gray-400">
+                Real-time Market Intelligence
             </div>
         </div>
 
     </div>
 
-    <!-- RIGHT: STATUS -->
-    <div class="flex items-center gap-2">
-
-        <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-
-        <span class="text-green-400 text-xs font-semibold">
-            LIVE
-        </span>
-
-        <span class="text-gray-400 text-xs">
-            Auto Refresh 60s
-        </span>
-
+    <div class="text-green-400 text-xs font-semibold">
+        🟢 LIVE
     </div>
 
 </div>
-<!-- TOP SUMMARY -->
+
+<!-- SUMMARY -->
 <div class="p-3">
-    <div class="bg-white p-3 rounded-xl shadow text-sm" id="summary">
-        Loading summary...
+    <div id="summary"
+         class="bg-white p-4 rounded-xl shadow text-sm">
+        Loading...
     </div>
 </div>
 
-<!-- MAIN 50/50 LAYOUT -->
-<div class="grid grid-cols-2 gap-3 p-3">
+<!-- TABS -->
+<div class="px-3">
 
-    <!-- LEFT FEED -->
-    <div class="bg-white p-3 rounded-xl shadow scroll">
+    <div class="flex gap-2 mb-4">
 
-        <h2 class="font-bold text-green-700 mb-2">
-            🔥 Opportunities + Infra Feed
-        </h2>
+        <button id="tab1btn"
+                class="tab-btn tab-active"
+                onclick="showTab('tab1')">
+            Opportunities + Infra
+        </button>
 
-        <div id="feed_left" class="text-xs"></div>
+        <button id="tab2btn"
+                class="tab-btn"
+                onclick="showTab('tab2')">
+            Competitors + Steel
+        </button>
 
     </div>
 
-    <!-- RIGHT FEED -->
-    <div class="bg-white p-3 rounded-xl shadow scroll">
+    <div id="tab1">
+        <div id="feed_left"></div>
+    </div>
 
-        <h2 class="font-bold text-red-700 mb-2">
-            🔴 Competitors + Steel Feed
-        </h2>
-
-        <div id="feed_right" class="text-xs"></div>
-
+    <div id="tab2" style="display:none;">
+        <div id="feed_right"></div>
     </div>
 
 </div>
 
 <script>
 
-async function loadData() {
+/* ---------------- READ SYSTEM ---------------- */
 
-    const res = await fetch("/api/dashboard");
+let readNews = new Set(
+    JSON.parse(localStorage.getItem("read_news") || "[]")
+);
+
+function markAsRead(link){
+    readNews.add(link);
+    localStorage.setItem("read_news", JSON.stringify([...readNews]));
+}
+
+/* 🔥 REAL TIME UI UPDATE (NO REFRESH) */
+function applyReadUI(link){
+
+    document.querySelectorAll(".news-card").forEach(card => {
+
+        if(card.dataset.link === link){
+            card.classList.add("read");
+        }
+
+    });
+
+}
+
+/* ---------------- DATA STORAGE ---------------- */
+
+let leftData = [];
+let rightData = [];
+
+let leftIndex = 0;
+let rightIndex = 0;
+
+const PAGE_SIZE = 10;
+
+/* ---------------- TAB ---------------- */
+
+function showTab(tab){
+
+    document.getElementById("tab1").style.display="none";
+    document.getElementById("tab2").style.display="none";
+
+    document.getElementById("tab1btn").className="tab-btn";
+    document.getElementById("tab2btn").className="tab-btn";
+
+    if(tab==="tab1"){
+        document.getElementById("tab1").style.display="block";
+        document.getElementById("tab1btn").className="tab-btn tab-active";
+    }
+
+    if(tab==="tab2"){
+        document.getElementById("tab2").style.display="block";
+        document.getElementById("tab2btn").className="tab-btn tab-active";
+    }
+}
+
+/* ---------------- CLICK HANDLER ---------------- */
+
+function openNews(link){
+
+    markAsRead(link);
+
+    applyReadUI(link);   // 🔥 instant fade (NO REFRESH)
+
+    window.open(link, "_blank");
+
+}
+
+/* ---------------- RENDER ---------------- */
+
+function renderCards(container, data, start){
+
+    const chunk = data.slice(start, start + PAGE_SIZE);
+
+    const html = chunk.map(i => {
+
+        const isRead = readNews.has(i.link);
+
+        return `
+        <div class="news-card ${isRead ? 'read' : ''}"
+             data-link="${i.link}"
+             onclick="openNews('${i.link}')">
+
+            <div class="flex justify-between mb-2">
+
+                <span class="tag bg-gray-100 text-gray-700">
+                    ${i.tag || "NEWS"}
+                </span>
+
+                <span class="text-xs text-gray-400">
+                    ${i.date || "Recent"}
+                </span>
+
+            </div>
+
+            <div class="font-semibold mb-2">
+                ${i.title}
+            </div>
+
+            <div class="text-sm text-gray-600">
+                ${i.insight || ""}
+            </div>
+
+            <div class="mt-2 text-xs text-gray-500">
+                🚨 ${i.impact || "MEDIUM"} | 🎯 ${i.score || 0}
+            </div>
+
+        </div>
+        `;
+    }).join("");
+
+    document.getElementById(container)
+        .insertAdjacentHTML("beforeend", html);
+}
+
+/* ---------------- LOAD DATA ---------------- */
+
+async function loadData(){
+
+    const res = await fetch("http://127.0.0.1:5000/api/dashboard");
     const data = await res.json();
 
-    // SUMMARY
     document.getElementById("summary").innerHTML = `
         🟢 Opportunities: ${data.opportunities?.length || 0}
         | 🔴 Competitors: ${data.competitors?.length || 0}
         | 🔵 Steel: ${data.steel?.length || 0}
         | 🟣 Infra: ${data.infra?.length || 0}
-        <br>
-        <b>Top Signal:</b> ${data.top_opportunities?.[0]?.title || "No signal"}
+        <br><b>Top:</b> ${data.top_opportunities?.[0]?.title || "No signal"}
     `;
 
-    // LEFT FEED (Opportunities + Infra)
-    let left = [
+    leftData = [
         ...(data.opportunities || []),
         ...(data.infra || [])
     ];
 
-    document.getElementById("feed_left").innerHTML =
-        left.map(i => `
-            <div class="border p-2 rounded mb-2 bg-gray-50">
-
-                <div class="font-semibold text-gray-800">
-                    ${i.title}
-                </div>
-
-                <div class="text-gray-600 mt-1">
-                    ${i.insight}
-                </div>
-
-                <!-- FIXED DATE DISPLAY -->
-                <div class="text-gray-400 mt-1 text-xs">
-                    🕒 ${i.date || "Recent"}
-                </div>
-
-                <div class="text-gray-500 mt-1">
-                    🚨 ${i.impact} | 📌 ${i.tag} | 🎯 ${i.score}
-                </div>
-
-                <div class="mt-2">
-                    <a href="${i.link}" target="_blank"
-                       class="bg-blue-600 text-white px-2 py-1 rounded text-xs">
-                        Open
-                    </a>
-                </div>
-
-            </div>
-        `).join("");
-
-    // RIGHT FEED (Competitors + Steel)
-    let right = [
+    rightData = [
         ...(data.competitors || []),
         ...(data.steel || [])
     ];
 
-    document.getElementById("feed_right").innerHTML =
-        right.map(i => `
-            <div class="border p-2 rounded mb-2 bg-gray-50">
+    document.getElementById("feed_left").innerHTML = "";
+    document.getElementById("feed_right").innerHTML = "";
 
-                <div class="font-semibold text-gray-800">
-                    ${i.title}
-                </div>
+    leftIndex = 0;
+    rightIndex = 0;
 
-                <div class="text-gray-600 mt-1">
-                    ${i.insight}
-                </div>
-
-                <!-- FIXED DATE DISPLAY -->
-                <div class="text-gray-400 mt-1 text-xs">
-                    🕒 ${i.date || "Recent"}
-                </div>
-
-                <div class="text-gray-500 mt-1">
-                    🚨 ${i.impact} | 📌 ${i.tag} | 🎯 ${i.score}
-                </div>
-
-                <div class="mt-2">
-                    <a href="${i.link}" target="_blank"
-                       class="bg-red-600 text-white px-2 py-1 rounded text-xs">
-                        Open
-                    </a>
-                </div>
-
-            </div>
-        `).join("");
-
+    loadMore();
 }
 
+/* ---------------- INFINITE SCROLL ---------------- */
+
+function loadMore(){
+
+    renderCards("feed_left", leftData, leftIndex);
+    renderCards("feed_right", rightData, rightIndex);
+
+    leftIndex += PAGE_SIZE;
+    rightIndex += PAGE_SIZE;
+}
+
+window.addEventListener("scroll", () => {
+
+    const nearBottom =
+        window.innerHeight + window.scrollY
+        >= document.body.offsetHeight - 200;
+
+    if(nearBottom){
+        loadMore();
+    }
+
+});
+
+/* ---------------- INIT ---------------- */
+
 loadData();
+
 setInterval(loadData, 60000);
 
 </script>
