@@ -1,38 +1,23 @@
 from flask import Flask, render_template, jsonify
 from flask_cors import CORS
 
-# ---------------- CREATE APP FIRST ----------------
 app = Flask(__name__)
 CORS(app)
 
 
-# ---------------- HOME PAGE ----------------
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return "PEB Dashboard Running Successfully"
 
 
-# ---------------- API ----------------
 @app.route("/api/dashboard")
 def dashboard():
 
     return jsonify({
-        "summary": "INDSTAAL Intelligence Live",
-
-        "alerts": fetch_category_news("alerts"),
-
-        "top_opportunities": fetch_category_news("opportunities"),
-
-        "opportunities": fetch_category_news("opportunities"),
-
-        "competitors": fetch_category_news("competitors"),
-
-        "steel": fetch_category_news("steel"),
-
-        "infra": fetch_category_news("infra")
+        "status": "ok",
+        "message": "server running"
     })
 
 
-# ---------------- RUN ----------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
